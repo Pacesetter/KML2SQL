@@ -1,0 +1,35 @@
+﻿<Window x:Class="KML2SQL.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="KML2SQL" Height="350" Width="525">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="98*"/>
+            <ColumnDefinition Width="419*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="KML File:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="KMLFileLocationBox" HorizontalAlignment="Left" Height="23" Margin="72,13,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="395" Text="C:\..." GotFocus="KMLFileLocationBox_GotFocus" Grid.ColumnSpan="2"/>
+        <Button Content="..." HorizontalAlignment="Left" Margin="374,14,0,0" VerticalAlignment="Top" Width="35" Click="Button_Click" Grid.Column="1"/>
+        <Label Content="Server Name:" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top" Width="83"/>
+        <Label Content="Login:" HorizontalAlignment="Left" Margin="10,72,0,0" VerticalAlignment="Top" Width="83"/>
+        <Label Content="Password:" HorizontalAlignment="Left" Margin="10,103,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="serverNameBox" HorizontalAlignment="Left" Height="23" Margin="0,44,0,0" TextWrapping="Wrap" Text="foo.myserver.com" VerticalAlignment="Top" Width="369" GotFocus="serverNameBox_GotFocus" Grid.Column="1"/>
+        <TextBox x:Name="userNameBox" HorizontalAlignment="Left" Height="23" Margin="0,74,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="369" GotFocus="userNameBox_GotFocus" Grid.Column="1"/>
+        <PasswordBox x:Name="passwordBox" HorizontalAlignment="Left" Margin="0,109,0,0" VerticalAlignment="Top" Width="369" GotFocus="passwordBox_GotFocus" Grid.Column="1"/>
+        <TextBox x:Name="databaseNameBox" HorizontalAlignment="Left" Height="23" Margin="228,147,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="141" GotFocus="databaseNameBox_GotFocus" Grid.Column="1"/>
+        <TextBox x:Name="tableBox" HorizontalAlignment="Left" Height="23" Margin="228,174,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="141" Text="myTable" GotFocus="tableBox_GotFocus" Grid.Column="1"/>
+        <TextBox x:Name="columnNameBox" HorizontalAlignment="Left" Height="23" Margin="228,202,0,0" TextWrapping="Wrap" Text="placemark" VerticalAlignment="Top" Width="141" GotFocus="columnNameBox_GotFocus" Grid.Column="1"/>
+        <ListBox HorizontalAlignment="Left" Height="53" Margin="10,144,0,0" VerticalAlignment="Top" Width="146" Grid.ColumnSpan="2">
+            <RadioButton x:Name="geometryMode" Content="Geometry Mode" IsChecked="True"/>
+            <Label Content="" RenderTransformOrigin="0.816,-0.538" Height="10"/>
+            <RadioButton x:Name="geographyMode" Content="Geography Mode"/>
+        </ListBox>
+        <CheckBox x:Name="sridCheckBox" Content="Set SRID" HorizontalAlignment="Left" Margin="10,205,0,0" VerticalAlignment="Top" Checked="sridCheckBox_Checked" Unchecked="sridCheckBox_Unchecked"/>
+        <TextBox x:Name="sridBox" HorizontalAlignment="Left" Height="23" Margin="77,202,0,0" TextWrapping="Wrap" Text="4326" VerticalAlignment="Top" Width="47" IsEnabled="False" RenderTransformOrigin="0.702,1.696" Grid.ColumnSpan="2"/>
+        <Label Content="Table Name:" HorizontalAlignment="Left" Margin="97,171,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <Label Content="Shape Column Name:" HorizontalAlignment="Left" Margin="97,199,0,0" VerticalAlignment="Top" Width="126" Grid.Column="1"/>
+        <Button x:Name="CreateDatabaseButton" Content="Upload Database" HorizontalAlignment="Left" Margin="228,259,0,0" VerticalAlignment="Top" Width="179" Click="CreateDatabaseButton_Click" Grid.Column="1"/>
+        <Label x:Name="databaseNameLabel" Content="Database Name:" HorizontalAlignment="Left" Margin="97,145,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.184,0.615" Width="97" Grid.Column="1"/>
+        <TextBlock x:Name="resultTextBox" HorizontalAlignment="Left" Margin="10,243,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="67" Width="311" Text="{Binding Path=ResultsText}" Grid.ColumnSpan="2"/>
+    </Grid>
+</Window>
