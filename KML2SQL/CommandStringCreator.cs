@@ -69,7 +69,7 @@ namespace KML2SQL
                             SET @geom = geometry::STPolyFromText('POLYGON((" + mapFeature.Coordinates + @"))', " + srid + @");
                             DECLARE @validGeom geometry;
                             set @validGeom = @geom.MakeValid().STUnion(@geom.STStartPoint())
-                            insert into " + tableName + " VALUES (" + mapFeature.ID + ", '"+mapFeature.Name+"' @validGeom);";
+                            insert into " + tableName + " VALUES (" + mapFeature.ID + ", '"+mapFeature.Name+"', @validGeom);";
             return commandString;
         }
     }

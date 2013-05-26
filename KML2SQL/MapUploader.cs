@@ -22,8 +22,11 @@ namespace KML2SQL
         string tableName;
         bool geographyMode;
         int srid;
-        private string progress = "";
         Kml kml;
+        string sqlGeoType;
+        BackgroundWorker worker;
+
+        private string progress = "";
 
         public string Progress
         {
@@ -31,7 +34,7 @@ namespace KML2SQL
             set
             {
                 progress = value;
-                //Notify("Progress");
+                this.OnPropertyChanged("Progress");
             }
         }
 
@@ -44,23 +47,53 @@ namespace KML2SQL
             this.geographyMode = geographyMode;
             this.srid = srid;
             kml = KMLParser.Parse(fileLocation);
+            sqlGeoType = geographyMode == true ? "geography" : "geometry";
+            worker = new BackgroundWorker();
+            worker.WorkerReportsProgress = true;
+            worker.DoWork += new DoWorkEventHandler(bw_DoWork);
+            worker.ProgressChanged += new ProgressChangedEventHandler(bw_ProgressChanged);
+            worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw_RunWorkerComleted);
         }
 
         public void Upload()
         {
+#if DEBUG
+            DoWork();
+#endif
+            worker.RunWorkerAsync();
+        }
+
+        private void DoWork()
+        {
             using (var connection = new System.Data.SqlClient.SqlConnection(connectionString))
             {
                 connection.Open();
-                dropTable();
-                createTable(geographyMode);
+                dropTable(connection);
+                createTable(connection);
                 foreach (MapFeature mapFeature in enumerablePlacemarks(kml))
                 {
                     string commandString = CommandStringCreator.setCommandString(mapFeature, geographyMode, srid, tableName);
                     var command = new SqlCommand(commandString, connection);
                     command.CommandType = System.Data.CommandType.Text;
                     command.ExecuteNonQuery();
+                    worker.ReportProgress(0, "Uploading Placemark # " + mapFeature.ID.ToString());
                 }
             }
+        }
+
+        private void bw_DoWork(object sender, DoWorkEventArgs e)
+        {
+            DoWork();
+        }
+
+        private void bw_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            Progress = e.UserState.ToString();
+        }
+
+        private void bw_RunWorkerComleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            Progress = "Done!";
         }
 
         private IEnumerable<MapFeature> enumerablePlacemarks(Kml kml)
@@ -151,55 +184,43 @@ namespace KML2SQL
                     return PlacemarkType.Line;                    
             }
                 throw new Exception("Not a line, point, or polygon");
-        }     
+        }
 
-        private void dropTable()
+        private void dropTable(System.Data.SqlClient.SqlConnection connection)
         {
-            using (var connection = new System.Data.SqlClient.SqlConnection(connectionString))
+            try
             {
-                connection.Open();
-                try
-                {
-                    string dropCommandString = "DROP TABLE " + tableName + ";";
-                    var dropCommand = new System.Data.SqlClient.SqlCommand(dropCommandString, connection);
-                    dropCommand.CommandType = System.Data.CommandType.Text;
-                    dropCommand.ExecuteNonQuery();
-                    //updateResults("Existing Table Dropped");
-                }
-                catch
-                {
-                    //updateResults("No table found to drop");
-                }
+                string dropCommandString = "DROP TABLE " + tableName + ";";
+                var dropCommand = new System.Data.SqlClient.SqlCommand(dropCommandString, connection);
+                dropCommand.CommandType = System.Data.CommandType.Text;
+                dropCommand.ExecuteNonQuery();
+                worker.ReportProgress(0, "Existing Table Dropped");
+            }
+            catch
+            {
+                worker.ReportProgress(0, "No table found to drop");
             }
         }
 
-        private void createTable(bool geographyMode)
+        private void createTable(System.Data.SqlClient.SqlConnection connection)
         {
-            using (var connection = new System.Data.SqlClient.SqlConnection(connectionString))
-            {
-                string mode = "geometry";
-                if (geographyMode)
-                    mode = "geography";
-                connection.Open();
-
-                    string commandString = @"CREATE TABLE [" + tableName + @"] ([Id] INT NOT NULL PRIMARY KEY,
-                        [Name] VARCHAR(50) NOT NULL, 
-                        [" + columnName + @"] [sys].[" + mode + @"] NOT NULL, );";
-                    var command = new System.Data.SqlClient.SqlCommand(commandString, connection);
-                    command.CommandType = System.Data.CommandType.Text;
-                    command.ExecuteNonQuery();
-                    //updateResults("Table Created");
-            }
-            
+            string commandString = @"CREATE TABLE [" + tableName + @"] ([Id] INT NOT NULL PRIMARY KEY,
+                [Name] VARCHAR(50) NOT NULL, 
+                [" + columnName + @"] [sys].[" + sqlGeoType + @"] NOT NULL, );";
+            var command = new System.Data.SqlClient.SqlCommand(commandString, connection);
+            command.CommandType = System.Data.CommandType.Text;
+            command.ExecuteNonQuery();
+            worker.ReportProgress(0, "Table Created");       
         }
 
         #region INotifyPropertyChanged Members
 
         public event PropertyChangedEventHandler PropertyChanged;
-        void Notify(string propName)
+
+        void OnPropertyChanged(string propName)
         {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(propName));
+            if (this.PropertyChanged != null)
+                this.PropertyChanged(this, new PropertyChangedEventArgs(propName));
         }
         #endregion
     }

@@ -14,8 +14,7 @@ namespace KML2SQLTest
         [TestMethod]
         public void CheckNPA()
         {
-            const string filePath = @"TestData\npa.kml";
-            myUploader = new MapUploader("ylkx1ic1so.database.windows.net", "hackathon", "pabreetzio", passwordList[0], "polygon", filePath, "myTable", 4326, true);
+            myUploader = new MapUploader("ylkx1ic1so.database.windows.net", "hackathon", "pabreetzio", passwordList[0], "polygon", @"TestData\npa.kml", "myTable", 4326, true);
             myUploader.Upload();
         }
 
@@ -27,10 +26,17 @@ namespace KML2SQLTest
         }
 
         [TestMethod]
-        public void BasicKmlOnMySql()
+        public void TestGeometry()
         {
-            myUploader = new MapUploader("192.168.0.202", "test", "root", passwordList[1], "placemark", @"TestData\Basic.kml", "myTable", 4326, true);
+            myUploader = new MapUploader("ylkx1ic1so.database.windows.net", "hackathon", "pabreetzio", passwordList[0], "polygon", @"TestData\Basic.kml", "myTable", 4326, false);
             myUploader.Upload();
         }
+
+        //[TestMethod]
+        //public void BasicKmlOnMySql()
+        //{
+        //    myUploader = new MapUploader("192.168.0.202", "test", "root", passwordList[1], "placemark", @"TestData\Basic.kml", "myTable", 4326, true);
+        //    myUploader.Upload();
+        //}
     }
 }

@@ -20,8 +20,11 @@ namespace KML2SQL
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    /// 
     public partial class MainWindow : Window
     {
+        MapUploader myUploader;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -80,19 +83,23 @@ namespace KML2SQL
 
         private void CreateDatabaseButton_Click(object sender, RoutedEventArgs e)
         {
-            MapUploader myUploader;
             bool geography;
             if (geographyMode.IsChecked != null)
                 geography = (bool)geographyMode.IsChecked;
             else
                 geography = false;
-            int srid = parseSRID();
+            int srid = parseSRID(geography);
             if (srid != 0)
             {
                 try
                 {
-                    myUploader = new MapUploader(serverNameBox.Text, databaseNameBox.Text, userNameBox.Text, passwordBox.Password, columnNameBox.Text, KMLFileLocationBox.Text, tableBox.Text, int.Parse(sridBox.Text), geography);
-                    this.DataContext = myUploader;
+                    myUploader = new MapUploader(serverNameBox.Text, databaseNameBox.Text, userNameBox.Text, passwordBox.Password, 
+                        columnNameBox.Text, KMLFileLocationBox.Text, tableBox.Text, srid, geography);
+                    Binding b = new Binding();
+                    b.Source = myUploader;
+                    b.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
+                    b.Path = new PropertyPath("Progress");
+                    this.resultTextBox.SetBinding(TextBlock.TextProperty, b);
                     myUploader.Upload();
                 }
                 catch (Exception ex)
@@ -102,15 +109,20 @@ namespace KML2SQL
             }
         }
 
-        private int parseSRID()
+        private int parseSRID(bool geographyMode)
         {
-            MessageBoxResult sridMessage;
-            int srid;
-            if (int.TryParse(sridBox.Text, out srid))
-                return srid;
+            if (!geographyMode)
+                return 4326;
             else
-                sridMessage = MessageBox.Show("SRID must be a valid four digit number");
-            return srid;
+            {
+                MessageBoxResult sridMessage;
+                int srid;
+                if (int.TryParse(sridBox.Text, out srid))
+                    return srid;
+                else
+                    sridMessage = MessageBox.Show("SRID must be a valid four digit number");
+                return srid;
+            }
         }
 
         private void databaseNameBox_GotFocus(object sender, RoutedEventArgs e)
@@ -138,6 +150,22 @@ namespace KML2SQL
                     MessageBox.Show("An error occured while opening the file" + myOpenFileDialog.FileName + "\n" + ex.Message, "Unable to open excuse file.");
                 }
             }
+        }
+
+        private void geometryMode_Checked(object sender, RoutedEventArgs e)
+        {
+            if (sridCheckBox != null)
+                sridCheckBox.IsEnabled = false;
+            if (sridBox != null)
+                sridBox.Text = "NA";
+        }
+
+        private void geographyMode_Checked(object sender, RoutedEventArgs e)
+        {
+            if (sridCheckBox != null)
+                sridCheckBox.IsEnabled = true;
+            if (sridBox != null)
+                sridBox.Text = "4326";
         }
     }
 }
