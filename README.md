@@ -3,7 +3,7 @@
 ###Overview
 KML2SQL is a program that takes KML files and uploades them to MSSQL geography or geometry files. I'm now feeling good enough about this that I'm going to call it Version 1.0.
 
-[Click Here to Install!](http://goo.gl/arnVS).
+[Click Here to Install!](http://goo.gl/arnVS)
 
 To-Do List:
 
