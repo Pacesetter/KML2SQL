@@ -5,6 +5,9 @@ KML2SQL is a program that takes KML files and uploades them to MSSQL geography o
 
 [Click Here to Install!](http://goo.gl/arnVS)
 
+###WARNING:
+KML2SQL is vulnerable to SQL injection attacks. Fixing this is on the to-do list, but you should not be using KML files that might be malicious.
+
 To-Do List:
 
 * Add support for <SimpleData> and <Timespan> attributes as extra columns in SQL.
