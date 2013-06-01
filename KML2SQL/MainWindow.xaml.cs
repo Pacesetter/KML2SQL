@@ -147,7 +147,7 @@ namespace KML2SQL
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("An error occured while opening the file" + myOpenFileDialog.FileName + "\n" + ex.Message, "Unable to open excuse file.");
+                    MessageBox.Show("An error occured while opening the file" + myOpenFileDialog.FileName + "\n" + ex.Message, "Unable to open KML file.");
                 }
             }
         }
