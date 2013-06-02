@@ -3,7 +3,7 @@
 ###Overview
 KML2SQL takes KML files and uploades them to MSSQL database using geography or geometry objects.
 
-[Click Here to Install!](http://goo.gl/arnVS)
+[Click Here to Install!](http://goo.gl/TbYhK)
 
 ###What's New:
 6/2/2013 - A big update that has significantly reworked the backend that allows the following:
