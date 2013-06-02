@@ -136,7 +136,7 @@ namespace KML2SQL
         {
             OpenFileDialog myOpenFileDialog = new OpenFileDialog();
             myOpenFileDialog.InitialDirectory = Environment.SpecialFolder.MyDocuments.ToString();
-            myOpenFileDialog.Filter = "KML Files (*.kml)|*.kml|All Files (*.*)|*.*";
+            myOpenFileDialog.Filter = "KML Files (*.kml|*.kml|All Files (*.*)|*.*";
             myOpenFileDialog.FileName = "myFile.kml";
             Nullable<bool> result = myOpenFileDialog.ShowDialog();
             if (result == true)

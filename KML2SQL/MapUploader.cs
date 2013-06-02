@@ -11,13 +11,14 @@ using SharpKml.Engine;
 using Microsoft.SqlServer.Types;
 using System.Data.SqlTypes;
 using System.Data.SqlClient;
+using System.Diagnostics;
 
 namespace KML2SQL
 {
     public class MapUploader : INotifyPropertyChanged
     {
         string connectionString;
-        string columnName;
+        string placemarkColumnName;
         string fileLocation;
         string tableName;
         bool geographyMode;
@@ -25,6 +26,8 @@ namespace KML2SQL
         Kml kml;
         string sqlGeoType;
         BackgroundWorker worker;
+        List<MapFeature> mapFeatures = new List<MapFeature>();
+        List<string> columnNames = new List<string>();
 
         private string progress = "";
 
@@ -41,7 +44,7 @@ namespace KML2SQL
         public MapUploader(string serverName, string databaseName, string username, string password, string columnName, string fileLocation, string tableName, int srid, bool geographyMode)
         {
             connectionString = "Data Source=" + serverName + ";Initial Catalog=" + databaseName + ";Persist Security Info=True;User ID=" + username + ";Password=" + password;
-            this.columnName = columnName;
+            this.placemarkColumnName = columnName;
             this.fileLocation = fileLocation;
             this.tableName = tableName;
             this.geographyMode = geographyMode;
@@ -53,6 +56,15 @@ namespace KML2SQL
             worker.DoWork += new DoWorkEventHandler(bw_DoWork);
             worker.ProgressChanged += new ProgressChangedEventHandler(bw_ProgressChanged);
             worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw_RunWorkerComleted);
+            foreach (MapFeature mapFeature in enumerablePlacemarks(kml))
+            {
+                mapFeatures.Add(mapFeature);
+                foreach (KeyValuePair<string, string> pair in mapFeature.Data)
+                    if (!columnNames.Contains(pair.Key))
+                        if (pair.Key.ToLower() != "id")
+                            columnNames.Add(pair.Key);
+
+            }
         }
 
         public void Upload()
@@ -60,7 +72,9 @@ namespace KML2SQL
 #if DEBUG
             DoWork();
 #endif
+#if !DEBUG
             worker.RunWorkerAsync();
+#endif
         }
 
         private void DoWork()
@@ -70,13 +84,11 @@ namespace KML2SQL
                 connection.Open();
                 dropTable(connection);
                 createTable(connection);
-                foreach (MapFeature mapFeature in enumerablePlacemarks(kml))
+                foreach (MapFeature mapFeature in mapFeatures)
                 {
-                    string commandString = CommandStringCreator.setCommandString(mapFeature, geographyMode, srid, tableName);
-                    var command = new SqlCommand(commandString, connection);
-                    command.CommandType = System.Data.CommandType.Text;
+                    SqlCommand command = MsSqlCommandCreator.createCommand(mapFeature, geographyMode, srid, tableName, placemarkColumnName, connection);
                     command.ExecuteNonQuery();
-                    worker.ReportProgress(0, "Uploading Placemark # " + mapFeature.ID.ToString());
+                    worker.ReportProgress(0, "Uploading Placemark # " + mapFeature.Id.ToString());
                 }
             }
         }
@@ -98,93 +110,15 @@ namespace KML2SQL
 
         private IEnumerable<MapFeature> enumerablePlacemarks(Kml kml)
         {
-            int ID = 1;
+            int Id = 1;
             foreach (var placemark in kml.Flatten().OfType<Placemark>())
             {
-                MapFeature mapFeature = new MapFeature();
-                if (placemark.Name != null)
-                    mapFeature.Name = placemark.Name;
-                else
-                    mapFeature.Name = ID.ToString();
-                mapFeature.ID = ID;
-                mapFeature.Type = getPlacemarkType(placemark);
-                switch (mapFeature.Type)
-                {
-                    case PlacemarkType.Line:
-                        mapFeature.Coordinates = getLineCoordinates(placemark);
-                        break;
-                    case PlacemarkType.Point:
-                        mapFeature.Coordinates = getPointCoordinates(placemark);
-                        break;
-                    case PlacemarkType.Polygon:
-                        mapFeature.Coordinates = getPolygonCoordinates(placemark);
-                        break;
-                }
-                ID++;
+                MapFeature mapFeature = new MapFeature(placemark, Id);
+                Id++;
                 yield return mapFeature;
             }
         }
-
-        private string getPointCoordinates(Placemark placemark)
-        {
-            StringBuilder sb = new StringBuilder();
-            Point myPoint;
-            foreach (var element in placemark.Flatten())
-            {
-                if (element is Point)
-                {
-                    myPoint = (Point)element;
-                    sb.Append(myPoint.Coordinate.Longitude + " " + myPoint.Coordinate.Latitude);
-                }
-            }
-            return sb.ToString();
-        }
-
-        private string getLineCoordinates(Placemark placemark)
-        {
-            StringBuilder sb = new StringBuilder();
-            LineString lineString;
-            foreach (var element in placemark.Flatten())
-            {
-                if (element is LineString)
-                {
-                    lineString = (LineString)element;
-                    foreach (var vector in lineString.Coordinates)
-                        sb.Append(vector.Longitude.ToString() + " " + vector.Latitude.ToString() + ", ");
-                }
-            }
-            return sb.Remove(sb.Length - 2, 2).ToString();
-        }
-
-        private string getPolygonCoordinates(Placemark placemark)
-        {
-            StringBuilder sb = new StringBuilder();
-            Polygon myGeometry;
-            foreach (var element in placemark.Flatten())
-            {
-                if (element is Polygon)
-                {
-                    myGeometry = (Polygon)element;
-                    foreach (var vector in myGeometry.OuterBoundary.LinearRing.Coordinates)
-                        sb.Append(vector.Longitude.ToString() + " " + vector.Latitude.ToString() + ", ");
-                }
-            }
-            return sb.Remove(sb.Length - 2, 2).ToString();
-        }
-
-        private PlacemarkType getPlacemarkType(Placemark placemark)
-        {
-            foreach (var element in placemark.Flatten())
-            {
-                if (element is Polygon)
-                    return PlacemarkType.Polygon;
-                else if (element is Point)
-                    return PlacemarkType.Point;
-                else if (element is LineString)
-                    return PlacemarkType.Line;                    
-            }
-                throw new Exception("Not a line, point, or polygon");
-        }
+        
 
         private void dropTable(System.Data.SqlClient.SqlConnection connection)
         {
@@ -204,10 +138,16 @@ namespace KML2SQL
 
         private void createTable(System.Data.SqlClient.SqlConnection connection)
         {
-            string commandString = @"CREATE TABLE [" + tableName + @"] ([Id] INT NOT NULL PRIMARY KEY,
-                [Name] VARCHAR(50) NOT NULL, 
-                [" + columnName + @"] [sys].[" + sqlGeoType + @"] NOT NULL, );";
-            var command = new System.Data.SqlClient.SqlCommand(commandString, connection);
+            StringBuilder sb = new StringBuilder();
+            sb.Append("CREATE TABLE [" + tableName + "] (");
+            sb.Append("[Id] INT NOT NULL PRIMARY KEY,");
+            if (columnNames.Count > 0)
+            {
+                foreach (string columnName in columnNames)
+                    sb.Append("[" + columnName + "] VARCHAR(max), ");
+            }
+            sb.Append("[" + placemarkColumnName + "] [sys].[" + sqlGeoType + "] NOT NULL, );");
+            var command = new System.Data.SqlClient.SqlCommand(sb.ToString(), connection);
             command.CommandType = System.Data.CommandType.Text;
             command.ExecuteNonQuery();
             worker.ReportProgress(0, "Table Created");       

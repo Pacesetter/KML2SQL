@@ -27,8 +27,8 @@
     <InstallUrl>http://zachshuford.com/kml2sql/</InstallUrl>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>3</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <ApplicationRevision>2</ApplicationRevision>
+    <ApplicationVersion>1.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -68,14 +68,12 @@
     <ApplicationIcon>vector_earth_planet.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Ionic.Zip.Reduced, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Visual Studio 2012\Projects\SharpKMLTest\SharpKMLTest\SharpKmlBinary\Ionic.Zip.Reduced.dll</HintPath>
+    <Reference Include="Ionic.Zip.Reduced">
+      <HintPath>..\SharpKml 1.06 - Binary\Release\Ionic.Zip.Reduced.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.SqlServer.Types, Version=11.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL" />
-    <Reference Include="SharpKml, Version=1.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Visual Studio 2012\Projects\SharpKMLTest\SharpKMLTest\SharpKmlBinary\SharpKml.dll</HintPath>
+    <Reference Include="SharpKml">
+      <HintPath>..\SharpKml 1.06 - Binary\Release\SharpKml.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -104,7 +102,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CommandStringCreator.cs" />
+    <Compile Include="MsSqlCommandCreator.cs" />
+    <Compile Include="Enums.cs" />
     <Compile Include="KMLParser.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
