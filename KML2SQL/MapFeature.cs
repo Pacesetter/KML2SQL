@@ -26,6 +26,13 @@ namespace KML2SQL
                 Name = placemark.Name;
             this.Id = Id;
             GeometryType = getPlacemarkType(placemark);
+            setGeometryType(placemark);
+            initializeData(placemark);
+            santizeData();
+        }
+
+        private void setGeometryType(Placemark placemark)
+        {
             switch (this.GeometryType)
             {
                 case OpenGisGeometryType.LineString:
@@ -38,8 +45,6 @@ namespace KML2SQL
                     Coordinates = getPolygonCoordinates(placemark);
                     break;
             }
-            initializeData(placemark);
-            santizeData();
         }
 
         private void santizeData()

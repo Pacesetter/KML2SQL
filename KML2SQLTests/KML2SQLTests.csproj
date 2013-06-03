@@ -64,6 +64,7 @@
     </None>
     <None Include="TestData\npa.kml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </None>
   </ItemGroup>
   <ItemGroup>

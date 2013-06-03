@@ -16,13 +16,6 @@ namespace KML2SQL
         public static SqlCommand createCommand(MapFeature mapFeature, bool geographyMode, int srid, string tableName, 
             string placemarkColumnName, SqlConnection connection)
         {
-            //string sqlCommandText = "insert into myTable(Id,Name,placemark) Values(@col1,@col2,@col3)";
-            
-            //sqlCommand.Parameters.AddWithValue("@col1", 6);
-            //sqlCommand.Parameters.AddWithValue("@col2", "Test");
-            //sqlCommand.Parameters.Add(new SqlParameter("@col3", myGeography) { UdtTypeName = "Geography" });
-
-
             StringBuilder sbColumns = new StringBuilder();
             StringBuilder sbValues = new StringBuilder();
             foreach (KeyValuePair<string, string> simpleData in mapFeature.Data)
@@ -71,19 +64,13 @@ namespace KML2SQL
             builder.SetSrid(srid);
             builder.BeginGeometry(mapFeature.GeometryType);
             builder.BeginFigure(mapFeature.Coordinates[0].Latitude, mapFeature.Coordinates[0].Longitude);
-            if (mapFeature.GeometryType == OpenGisGeometryType.Point)
-            {
-                builder.EndFigure();
-                builder.EndGeometry();
-            }
-            else
+            if (mapFeature.GeometryType != OpenGisGeometryType.Point)
             {
                 for (int i = 1; i < mapFeature.Coordinates.Length; i++)
-                    builder.AddLine(mapFeature.Coordinates[0].Latitude, mapFeature.Coordinates[0].Longitude);
-                builder.EndFigure();
-                builder.EndGeometry();
+                    builder.AddLine(mapFeature.Coordinates[0].Latitude, mapFeature.Coordinates[0].Longitude); 
             }
-
+            builder.EndFigure();
+            builder.EndGeometry();
             return builder.ConstructedGeometry;
         }
 

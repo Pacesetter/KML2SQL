@@ -51,11 +51,7 @@ namespace KML2SQL
             this.srid = srid;
             kml = KMLParser.Parse(fileLocation);
             sqlGeoType = geographyMode == true ? "geography" : "geometry";
-            worker = new BackgroundWorker();
-            worker.WorkerReportsProgress = true;
-            worker.DoWork += new DoWorkEventHandler(bw_DoWork);
-            worker.ProgressChanged += new ProgressChangedEventHandler(bw_ProgressChanged);
-            worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw_RunWorkerComleted);
+            initializeBackgroundWorker();
             foreach (MapFeature mapFeature in enumerablePlacemarks(kml))
             {
                 mapFeatures.Add(mapFeature);
@@ -65,6 +61,15 @@ namespace KML2SQL
                             columnNames.Add(pair.Key);
 
             }
+        }
+
+        private void initializeBackgroundWorker()
+        {
+            worker = new BackgroundWorker();
+            worker.WorkerReportsProgress = true;
+            worker.DoWork += new DoWorkEventHandler(bw_DoWork);
+            worker.ProgressChanged += new ProgressChangedEventHandler(bw_ProgressChanged);
+            worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw_RunWorkerComleted);
         }
 
         public void Upload()
