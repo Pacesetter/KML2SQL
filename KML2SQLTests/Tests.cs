@@ -44,6 +44,20 @@ namespace KML2SQLTests
             myUploader.Upload();
         }
 
+        [TestMethod]
+        public void SchoolTest()
+        {
+            myUploader = new MapUploader("ylkx1ic1so.database.windows.net", "hackathon", "pabreetzio", passwordList[0], "polygon", @"TestData\school.kml", "myTable", 4326, true);
+            myUploader.Upload();
+        }
+
+        [TestMethod]
+        public void SchoolTestGeometry()
+        {
+            myUploader = new MapUploader("ylkx1ic1so.database.windows.net", "hackathon", "pabreetzio", passwordList[0], "polygon", @"TestData\school.kml", "myTable", 4326, false);
+            myUploader.Upload();
+        }
+
         //[TestMethod]
         //public void BasicKmlOnMySql()
         //{

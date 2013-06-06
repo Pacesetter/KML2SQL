@@ -6,9 +6,9 @@ KML2SQL is a utility that uploads a KML file to a Microsoft SQL database, storin
 [**Click Here to Download the Installer!**](http://goo.gl/TbYhK)
 
 ###What's New:
-6/2/2013 - A big update that has significantly reworked the backend and allows for the following:
+6/2/2013 - v 1.1 - A big update that has significantly reworked the backend and allows for the following:
 * **Improved Security!** I think it's safe against SQL injection, but you should still be careful.
-* **Placemark Data!** SimpleData and Data types are now uploaded as additional columns. Note that since Data entries are untyped and SimpleData schemas are unreliable, all data is uploaded into Varchar(max) columns. Oh, and nulls are allowed in all of them. So you end up with a really inefficient database, but converting them all to ints, floats, or whatever is just a few SQL commands away.
+* **Placemark Data!** SimpleData and Data types are now uploaded as additional columns. Note that since Data entries are untyped and SimpleData schemas are unreliable, all data is uploaded into Varchar(max) columns. Oh, and nulls are allowed in all columns except ID and geometry/geography. So you end up with a really inefficient database, but converting them all to ints, floats, or whatever is just a few SQL commands away, right?
 * **Improved Expandability!** It should be easier to add support for mySQL and the like in the future.
 
 ###To-Do List:

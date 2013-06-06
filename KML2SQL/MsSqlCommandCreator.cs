@@ -24,6 +24,7 @@ namespace KML2SQL
                 sbValues.Append("@" + simpleData.Key + ",");
             }
             StringBuilder sb = new StringBuilder();
+            sb.Append(parseCoordinates(srid, mapFeature, geographyMode));
             sb.Append("INSERT INTO " + tableName + "(Id,");
             sb.Append(sbColumns);
             sb.Append(placemarkColumnName);
@@ -39,53 +40,87 @@ namespace KML2SQL
             {
                 sqlCommand.Parameters.AddWithValue("@" + simpleData.Key, simpleData.Value);
             }
-            string UdtType;
-            if (geographyMode)
-                UdtType = "Geography";
-            else
-                UdtType = "Geometry";
+            //string UdtType;
+            //if (geographyMode)
+            //    UdtType = "Geography";
+            //else
+            //    UdtType = "Geometry";
 
-            sqlCommand.Parameters.Add(new SqlParameter("@placemark", parseCoordinates(srid, mapFeature, geographyMode)) { UdtTypeName = UdtType });
+            //sqlCommand.Parameters.Add(new SqlParameter("@placemark", parseCoordinates(srid, mapFeature, geographyMode)) { UdtTypeName = UdtType });
             return sqlCommand;
         }
 
-        private static object parseCoordinates(int srid, MapFeature mapFeature, bool geographyMode)
+        private static string parseCoordinates(int srid, MapFeature mapFeature, bool geographyMode)
         {
+            StringBuilder commandString = new StringBuilder();
             if (geographyMode)
-                return parseCoordinatesGeography(srid, mapFeature);
-            else
-                return parseCoordinatesGeometry(srid, mapFeature);
-
-        }
-
-        private static SqlGeometry parseCoordinatesGeometry(int srid, MapFeature mapFeature)
-        {
-            SqlGeometryBuilder builder = new SqlGeometryBuilder();
-            builder.SetSrid(srid);
-            builder.BeginGeometry(mapFeature.GeometryType);
-            builder.BeginFigure(mapFeature.Coordinates[0].Latitude, mapFeature.Coordinates[0].Longitude);
-            if (mapFeature.GeometryType != OpenGisGeometryType.Point)
             {
-                for (int i = 1; i < mapFeature.Coordinates.Length; i++)
-                    builder.AddLine(mapFeature.Coordinates[0].Latitude, mapFeature.Coordinates[0].Longitude); 
-            }
-            builder.EndFigure();
-            builder.EndGeometry();
-            return builder.ConstructedGeometry;
-        }
-
-        private static SqlGeography parseCoordinatesGeography(int srid, MapFeature mapFeature)
-        {
-            SqlGeometry geometryHelper = parseCoordinatesGeometry(srid, mapFeature);
-            SqlGeography convertedGeography = new SqlGeography();
-            if (mapFeature.GeometryType == OpenGisGeometryType.Polygon)
-            {
-                SqlGeometry validGeom = geometryHelper.MakeValid().STUnion(geometryHelper.MakeValid().STStartPoint());
-                convertedGeography = SqlGeography.STGeomFromText(validGeom.STAsText(), srid);
+                commandString.Append(parseCoordinatesGeography(srid, mapFeature));
+                commandString.Append("DECLARE @placemark geography;");
+                commandString.Append("SET @placemark = @validGeo;");
             }
             else
-                convertedGeography = SqlGeography.STGeomFromText(geometryHelper.MakeValid().STAsText(), srid);
-            return convertedGeography;
+            {
+                commandString.Append(parseCoordinatesGeometry(srid, mapFeature));
+                commandString.Append("DECLARE @placemark geometry;");
+                commandString.Append("SET @placemark = @validGeom;");
+            }
+            return commandString.ToString();
+        }
+
+        private static string parseCoordinatesGeometry(int srid, MapFeature mapFeature)
+        {
+            StringBuilder commandString = new StringBuilder();
+            switch (mapFeature.GeometryType)
+            {
+                case OpenGisGeometryType.Polygon:
+                    {
+                        commandString.Append(@"DECLARE @geom geometry;
+                                        SET @geom = geometry::STPolyFromText('POLYGON((");
+                        foreach (Vector coordinate in mapFeature.Coordinates)
+                        {
+                            commandString.Append(coordinate.Longitude.ToString() + " " + coordinate.Latitude.ToString() + ", ");
+                        }
+                        commandString.Remove(commandString.Length - 2, 2).ToString();
+                        commandString.Append(@"))', " + srid + @");");
+                        commandString.Append("DECLARE @validGeom geometry;");
+                        commandString.Append("SET @validGeom = @geom.MakeValid().STUnion(@geom.STStartPoint());");
+                    }
+                    break;
+                case OpenGisGeometryType.LineString:
+                    {
+                        commandString.Append(@"DECLARE @validGeom geometry;
+                                    SET @validGeom = geometry::STLineFromText('LINESTRING (");
+                        foreach (Vector coordinate in mapFeature.Coordinates)
+                        {
+                            commandString.Append(coordinate.Longitude.ToString() + " " + coordinate.Latitude.ToString() + ", ");
+                        }
+                        commandString.Remove(commandString.Length - 2, 2).ToString();
+                        commandString.Append(@")', " + srid + @");");
+                        //commandString.Append("DECLARE @validGeom geometry;");
+                        //commandString.Append("SET @validGeom = @geom.MakeValid().STUnion(@geom.STStartPoint());");
+                    }
+                    break;
+                default:
+                    {
+                        commandString.Append(@"DECLARE @validGeom geometry;");
+                        commandString.Append("SET @validGeom = geometry::STPointFromText('POINT (");
+                        commandString.Append(mapFeature.Coordinates[0].Longitude.ToString() + " " + mapFeature.Coordinates[0].Latitude.ToString());
+                        commandString.Append(@")', " + srid + @");");
+                    }
+                    break;
+
+            }
+            return commandString.ToString();
+        }
+
+        private static string parseCoordinatesGeography(int srid, MapFeature mapFeature)
+        {
+            StringBuilder commandString = new StringBuilder();
+            commandString.Append(parseCoordinatesGeometry(srid, mapFeature));
+            commandString.Append("DECLARE @validGeo geography;");
+            commandString.Append("SET @validGeo = geography::STGeomFromText(@validGeom.STAsText(), " + srid + @");");
+            return commandString.ToString();          
         }
     }
 }

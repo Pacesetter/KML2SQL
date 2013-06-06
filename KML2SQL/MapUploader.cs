@@ -74,12 +74,7 @@ namespace KML2SQL
 
         public void Upload()
         {
-#if DEBUG
-            DoWork();
-#endif
-#if !DEBUG
             worker.RunWorkerAsync();
-#endif
         }
 
         private void DoWork()

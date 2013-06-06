@@ -25,24 +25,37 @@ namespace KML2SQL
             if (placemark.Name != null)
                 Name = placemark.Name;
             this.Id = Id;
-            GeometryType = getPlacemarkType(placemark);
-            setGeometryType(placemark);
+            GeometryType = setGeometryType(placemark);
+            initializeCoordinates(placemark);
             initializeData(placemark);
             santizeData();
         }
 
-        private void setGeometryType(Placemark placemark)
+        public OpenGisGeographyType GeographyType
+        {
+            get
+            {
+                if (GeometryType == OpenGisGeometryType.LineString)
+                    return OpenGisGeographyType.LineString;
+                else if (GeometryType == OpenGisGeometryType.Polygon)
+                    return OpenGisGeographyType.Polygon;
+                else
+                    return OpenGisGeographyType.Point;
+            }
+        }
+
+        private void initializeCoordinates(Placemark placemark)
         {
             switch (this.GeometryType)
             {
                 case OpenGisGeometryType.LineString:
-                    Coordinates = getLineCoordinates(placemark);
+                    Coordinates = initializeLineCoordinates(placemark);
                     break;
                 case OpenGisGeometryType.Point:
-                    Coordinates = getPointCoordinates(placemark);
+                    Coordinates = initializePointCoordinates(placemark);
                     break;
                 case OpenGisGeometryType.Polygon:
-                    Coordinates = getPolygonCoordinates(placemark);
+                    Coordinates = initializePolygonCoordinates(placemark);
                     break;
             }
         }
@@ -74,7 +87,7 @@ namespace KML2SQL
             }
         }
 
-        private OpenGisGeometryType getPlacemarkType(Placemark placemark)
+        private OpenGisGeometryType setGeometryType(Placemark placemark)
         {
             foreach (var element in placemark.Flatten())
             {
@@ -88,7 +101,7 @@ namespace KML2SQL
             throw new Exception("Placemark "+Id.ToString()+"Not a line, point, or polygon");
         }
 
-        private Vector[] getPointCoordinates(Placemark placemark)
+        private Vector[] initializePointCoordinates(Placemark placemark)
         {
             List<Vector> coordinates = new List<Vector>();
             foreach (var element in placemark.Flatten())
@@ -103,7 +116,7 @@ namespace KML2SQL
             return coordinates.ToArray();
         }
 
-        private Vector[] getLineCoordinates(Placemark placemark)
+        private Vector[] initializeLineCoordinates(Placemark placemark)
         {
             List<Vector> coordinates = new List<Vector>();
             LineString lineString;
@@ -119,7 +132,7 @@ namespace KML2SQL
             return coordinates.ToArray();
         }
 
-        private Vector[] getPolygonCoordinates(Placemark placemark)
+        private Vector[] initializePolygonCoordinates(Placemark placemark)
         {
             List<Vector> coordinates = new List<Vector>();
             Polygon myGeometry;
@@ -133,6 +146,16 @@ namespace KML2SQL
                 }
             }
             return coordinates.ToArray();
+        }
+
+        public void ReverseRingOrientation()
+        {
+            List<Vector> reversedCoordinates = new List<Vector>();
+            for (int i = Coordinates.Length - 1; i >= 0; i--)
+            {
+                reversedCoordinates.Add(Coordinates[i]);
+            }
+            Coordinates = reversedCoordinates.ToArray();
         }
 
         public override string ToString()
