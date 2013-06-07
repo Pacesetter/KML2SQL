@@ -167,5 +167,21 @@ namespace KML2SQL
             if (sridBox != null)
                 sridBox.Text = "4326";
         }
+
+        private void About_MouseEnter(object sender, MouseEventArgs e)
+        {
+            About.Opacity = 1;
+        }
+
+        private void About_MouseLeave(object sender, MouseEventArgs e)
+        {
+            About.Opacity = .25;
+        }
+
+        private void About_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            About about = new About();
+            about.Show();
+        }
     }
 }
