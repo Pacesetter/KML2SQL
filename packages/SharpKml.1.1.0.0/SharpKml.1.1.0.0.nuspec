@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>SharpKml</id>
+    <version>1.1.0.0</version>
+    <title>SharpKml</title>
+    <authors>cfreeze</authors>
+    <owners>cfreeze</owners>
+    <projectUrl>http://www.cfreeze.com/projects/sharpkml/</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A basic C# KML library implementation</description>
+    <releaseNotes>Updated to include basic 'Track' implementation.</releaseNotes>
+    <copyright>Copyright 2011</copyright>
+    <language />
+    <tags>KML</tags>
+    <dependencies>
+      <dependency id="DotNetZip.Reduced" version="1.9.1.8" />
+    </dependencies>
+  </metadata>
+</package>
