@@ -74,16 +74,20 @@ namespace KML2SQL
 
         public void Upload()
         {
+#if !DEBUG
             worker.RunWorkerAsync();
+#else
+            DoWork();
+#endif
         }
 
         private void DoWork()
         {
             using (var connection = new System.Data.SqlClient.SqlConnection(connectionString))
             {
-                connection.Open();
-                dropTable(connection);
-                createTable(connection);
+                //connection.Open();
+                //dropTable(connection);
+                //createTable(connection);
                 foreach (MapFeature mapFeature in mapFeatures)
                 {
                     SqlCommand command = MsSqlCommandCreator.createCommand(mapFeature, geographyMode, srid, tableName, placemarkColumnName, connection);

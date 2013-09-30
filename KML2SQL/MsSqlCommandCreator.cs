@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
+using System.Windows.Documents;
 using Microsoft.SqlServer.Types;
 using SharpKml.Base;
 using SharpKml.Dom;
@@ -25,14 +26,7 @@ namespace KML2SQL
             }
             StringBuilder sb = new StringBuilder();
             sb.Append(parseCoordinates(srid, mapFeature, geographyMode));
-            sb.Append("INSERT INTO " + tableName + "(Id,");
-            sb.Append(sbColumns);
-            sb.Append(placemarkColumnName);
-            sb.Append(") VALUES(");
-            sb.Append("@Id,");
-            sb.Append(sbValues);
-            sb.Append("@placemark");
-            sb.Append(")");
+            sb.Append(string.Format("INSERT INTO {0}(Id,{1}{2}) VALUES(@Id,{3}@placemark)", tableName, sbColumns, placemarkColumnName, sbValues));
             string sqlCommandText = sb.ToString();
             SqlCommand sqlCommand = new SqlCommand(sqlCommandText, connection);
             sqlCommand.Parameters.AddWithValue("@Id", mapFeature.Id);
