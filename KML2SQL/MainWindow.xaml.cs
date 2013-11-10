@@ -183,5 +183,11 @@ namespace KML2SQL
             About about = new About();
             about.Show();
         }
+
+        private void resultTextBox_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+                MessageBox.Show(resultTextBox.Text);
+        }
     }
 }

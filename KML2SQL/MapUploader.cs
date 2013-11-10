@@ -70,6 +70,7 @@ namespace KML2SQL
             worker.DoWork += new DoWorkEventHandler(bw_DoWork);
             worker.ProgressChanged += new ProgressChangedEventHandler(bw_ProgressChanged);
             worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw_RunWorkerComleted);
+            worker.WorkerSupportsCancellation = true;
         }
 
         public void Upload()
@@ -83,17 +84,26 @@ namespace KML2SQL
 
         private void DoWork()
         {
-            using (var connection = new System.Data.SqlClient.SqlConnection(connectionString))
+            try
             {
-                //connection.Open();
-                //dropTable(connection);
-                //createTable(connection);
-                foreach (MapFeature mapFeature in mapFeatures)
+                using (var connection = new System.Data.SqlClient.SqlConnection(connectionString))
                 {
-                    SqlCommand command = MsSqlCommandCreator.createCommand(mapFeature, geographyMode, srid, tableName, placemarkColumnName, connection);
-                    command.ExecuteNonQuery();
-                    worker.ReportProgress(0, "Uploading Placemark # " + mapFeature.Id.ToString());
+                    connection.Open();
+                    dropTable(connection);
+                    createTable(connection);
+                    foreach (MapFeature mapFeature in mapFeatures)
+                    {
+                        SqlCommand command = MsSqlCommandCreator.createCommand(mapFeature, geographyMode, srid, tableName, placemarkColumnName, connection);
+                        command.ExecuteNonQuery();
+                        worker.ReportProgress(0, "Uploading Placemark # " + mapFeature.Id.ToString());
+                    }
+                    worker.ReportProgress(0, "Done!");
                 }
+            }
+            catch (Exception ex)
+            {
+                worker.ReportProgress(0, ex.Message);
+                worker.CancelAsync();
             }
         }
 
@@ -109,7 +119,8 @@ namespace KML2SQL
 
         private void bw_RunWorkerComleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            Progress = "Done!";
+            //if (!worker.CancellationPending)
+            //    Progress = "Done!";
         }
 
         private IEnumerable<MapFeature> enumerablePlacemarks(Kml kml)

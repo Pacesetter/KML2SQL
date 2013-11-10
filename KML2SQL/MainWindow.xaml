@@ -29,9 +29,9 @@
         <TextBox x:Name="sridBox" HorizontalAlignment="Left" Height="23" Margin="77,202,0,0" TextWrapping="Wrap" Text="NA" VerticalAlignment="Top" Width="47" IsEnabled="False" RenderTransformOrigin="0.702,1.696" Grid.ColumnSpan="2"/>
         <Label Content="Table Name:" HorizontalAlignment="Left" Margin="97,171,0,0" VerticalAlignment="Top" Grid.Column="1"/>
         <Label Content="Shape Column Name:" HorizontalAlignment="Left" Margin="97,199,0,0" VerticalAlignment="Top" Width="126" Grid.Column="1"/>
-        <Button x:Name="CreateDatabaseButton" Content="Upload Database" HorizontalAlignment="Left" Margin="210,259,0,0" VerticalAlignment="Top" Width="179" Click="CreateDatabaseButton_Click" Grid.Column="1"/>
+        <Button x:Name="CreateDatabaseButton" Content="Upload File" HorizontalAlignment="Left" Margin="210,259,0,0" VerticalAlignment="Top" Width="179" Click="CreateDatabaseButton_Click" Grid.Column="1"/>
         <Label x:Name="databaseNameLabel" Content="Database Name:" HorizontalAlignment="Left" Margin="97,145,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.184,0.615" Width="97" Grid.Column="1"/>
-        <TextBlock x:Name="resultTextBox" HorizontalAlignment="Left" Margin="10,259,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="22" Width="293" Grid.ColumnSpan="2"/>
+        <TextBlock x:Name="resultTextBox" Text="Note: Existing Tables will be overwritten." HorizontalAlignment="Left" Margin="10,259,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="53" Width="293" Grid.ColumnSpan="2" MouseDown="resultTextBox_MouseDown"/>
         <Label x:Name="About" Content="?" Grid.Column="1" HorizontalAlignment="Left" Margin="383,3,0,0" VerticalAlignment="Top" Opacity="0.25" FontSize="20" FontWeight="Bold" MouseEnter="About_MouseEnter" MouseLeave="About_MouseLeave" MouseDown="About_MouseDown"/>
     </Grid>
 </Window>
