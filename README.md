@@ -1,4 +1,4 @@
-#KML2SQL v 1.1
+#KML2SQL v 1.2
 
 ###Overview
 KML2SQL is a utility that uploads a KML file to a Microsoft SQL database, storing the placemarks in geography or geometry objects.
@@ -6,7 +6,11 @@ KML2SQL is a utility that uploads a KML file to a Microsoft SQL database, storin
 <a href="http://goo.gl/TbYhK"><img src="https://raw.github.com/Pharylon/KML2SQL/master/download.png" /></a>
 
 ###What's New:
-6/2/2013 - v 1.1 - A big update that has significantly reworked the backend and allows for the following:
+**11/10/2013 - v 1.2**
+* Better error reporting when something goes wrong.
+* Made it more clear that a new table will be created, and existing tables will be overwritten.
+
+**6/2/2013 - v 1.1** - A big update that has significantly reworked the backend and allows for the following:
 * **Improved Security!** I think it's safe against SQL injection, but you should still be careful.
 * **Placemark Data!** SimpleData and Data types are now uploaded as additional columns. Note that since Data entries are untyped and SimpleData schemas are unreliable, all data is uploaded into Varchar(max) columns. Oh, and nulls are allowed in all columns except ID and geometry/geography. So you end up with a really inefficient database, but converting them all to ints, floats, or whatever is just a few SQL commands away, right?
 * **Improved Expandability!** It should be easier to add support for mySQL and the like in the future.
