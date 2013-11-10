@@ -12,6 +12,7 @@ using Microsoft.SqlServer.Types;
 using System.Data.SqlTypes;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.IO;
 
 namespace KML2SQL
 {
@@ -21,6 +22,7 @@ namespace KML2SQL
         string placemarkColumnName;
         string fileLocation;
         string tableName;
+        StringBuilder log;
         bool geographyMode;
         int srid;
         Kml kml;
@@ -28,7 +30,7 @@ namespace KML2SQL
         BackgroundWorker worker;
         List<MapFeature> mapFeatures = new List<MapFeature>();
         List<string> columnNames = new List<string>();
-
+        string logFile;
         private string progress = "";
 
         public string Progress
@@ -38,10 +40,11 @@ namespace KML2SQL
             {
                 progress = value;
                 this.OnPropertyChanged("Progress");
+                log.Append(value + Environment.NewLine);
             }
         }
 
-        public MapUploader(string serverName, string databaseName, string username, string password, string columnName, string fileLocation, string tableName, int srid, bool geographyMode)
+        public MapUploader(string serverName, string databaseName, string username, string password, string columnName, string fileLocation, string tableName, int srid, bool geographyMode, StringBuilder log, string logFile)
         {
             connectionString = "Data Source=" + serverName + ";Initial Catalog=" + databaseName + ";Persist Security Info=True;User ID=" + username + ";Password=" + password;
             this.placemarkColumnName = columnName;
@@ -49,6 +52,8 @@ namespace KML2SQL
             this.tableName = tableName;
             this.geographyMode = geographyMode;
             this.srid = srid;
+            this.log = log;
+            this.logFile = logFile;
             kml = KMLParser.Parse(fileLocation);
             sqlGeoType = geographyMode == true ? "geography" : "geometry";
             initializeBackgroundWorker();
@@ -56,8 +61,7 @@ namespace KML2SQL
             {
                 mapFeatures.Add(mapFeature);
                 foreach (KeyValuePair<string, string> pair in mapFeature.Data)
-                    if (!columnNames.Contains(pair.Key))
-                        if (pair.Key.ToLower() != "id")
+                    if (!columnNames.Contains(pair.Key) && pair.Key.ToLower() != "id")
                             columnNames.Add(pair.Key);
 
             }
@@ -119,8 +123,11 @@ namespace KML2SQL
 
         private void bw_RunWorkerComleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            //if (!worker.CancellationPending)
-            //    Progress = "Done!";
+            using (var writer = new StreamWriter(logFile, true))
+            {
+                if (log != null)
+                    writer.Write(log);
+            }
         }
 
         private IEnumerable<MapFeature> enumerablePlacemarks(Kml kml)

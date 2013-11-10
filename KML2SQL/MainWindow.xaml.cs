@@ -14,6 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
 using Microsoft.Win32;
+using System.Diagnostics;
 
 namespace KML2SQL
 {
@@ -24,10 +25,15 @@ namespace KML2SQL
     public partial class MainWindow : Window
     {
         MapUploader myUploader;
+        StringBuilder log;
+        string logFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\KML2SQL";
+        string logFile = string.Empty;
 
         public MainWindow()
         {
             InitializeComponent();
+            if (!Directory.Exists(logFolder))
+                Directory.CreateDirectory(logFolder);
         }
 
         private void myUploader_progressUpdate(string text)
@@ -83,6 +89,8 @@ namespace KML2SQL
 
         private void CreateDatabaseButton_Click(object sender, RoutedEventArgs e)
         {
+            log = new StringBuilder();
+            logFile = logFolder + "\\KML2SQL_Log_" + DateTime.Now.ToString("yyyy-MM-dd-hhmmss-fff") + ".txt";
             bool geography;
             if (geographyMode.IsChecked != null)
                 geography = (bool)geographyMode.IsChecked;
@@ -93,8 +101,8 @@ namespace KML2SQL
             {
                 try
                 {
-                    myUploader = new MapUploader(serverNameBox.Text, databaseNameBox.Text, userNameBox.Text, passwordBox.Password, 
-                        columnNameBox.Text, KMLFileLocationBox.Text, tableBox.Text, srid, geography);
+                    myUploader = new MapUploader(serverNameBox.Text, databaseNameBox.Text, userNameBox.Text, passwordBox.Password,
+                        columnNameBox.Text, KMLFileLocationBox.Text, tableBox.Text, srid, geography, log, logFile);
                     Binding b = new Binding();
                     b.Source = myUploader;
                     b.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
@@ -105,6 +113,15 @@ namespace KML2SQL
                 catch (Exception ex)
                 {
                     resultTextBox.Text = "Error: " + ex.ToString();
+                    log.Append(ex.ToString() + Environment.NewLine);
+                }
+                finally
+                {
+                    using (var writer = new StreamWriter(logFile, true))
+                    {
+                        if (log != null)
+                            writer.Write(log);
+                    }
                 }
             }
         }
@@ -184,10 +201,17 @@ namespace KML2SQL
             about.Show();
         }
 
+
+        [Obsolete] //depricated by log files. No longer called.
         private void resultTextBox_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ClickCount == 2)
                 MessageBox.Show(resultTextBox.Text);
+        }
+
+        private void Log_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start(logFolder);
         }
     }
 }
