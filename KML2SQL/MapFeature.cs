@@ -25,10 +25,10 @@ namespace KML2SQL
             if (placemark.Name != null)
                 Name = placemark.Name;
             this.Id = Id;
-            GeometryType = setGeometryType(placemark);
-            initializeCoordinates(placemark);
-            initializeData(placemark);
-            santizeData();
+            GeometryType = SetGeometryType(placemark);
+            InitializeCoordinates(placemark);
+            InitializeData(placemark);
+            SantizeData();
         }
 
         public OpenGisGeographyType GeographyType
@@ -44,23 +44,23 @@ namespace KML2SQL
             }
         }
 
-        private void initializeCoordinates(Placemark placemark)
+        private void InitializeCoordinates(Placemark placemark)
         {
             switch (this.GeometryType)
             {
                 case OpenGisGeometryType.LineString:
-                    Coordinates = initializeLineCoordinates(placemark);
+                    Coordinates = InitializeLineCoordinates(placemark);
                     break;
                 case OpenGisGeometryType.Point:
                     Coordinates = initializePointCoordinates(placemark);
                     break;
                 case OpenGisGeometryType.Polygon:
-                    Coordinates = initializePolygonCoordinates(placemark);
+                    Coordinates = InitializePolygonCoordinates(placemark);
                     break;
             }
         }
 
-        private void santizeData()
+        private void SantizeData()
         {
             foreach (KeyValuePair<string, string> kvPair in Data)
             {
@@ -71,7 +71,7 @@ namespace KML2SQL
             }
         }
 
-        private void initializeData(Placemark placemark)
+        private void InitializeData(Placemark placemark)
         {
             foreach (SimpleData sd in placemark.Flatten().OfType<SimpleData>())
             {
@@ -87,7 +87,7 @@ namespace KML2SQL
             }
         }
 
-        private OpenGisGeometryType setGeometryType(Placemark placemark)
+        private OpenGisGeometryType SetGeometryType(Placemark placemark)
         {
             foreach (var element in placemark.Flatten())
             {
@@ -116,7 +116,7 @@ namespace KML2SQL
             return coordinates.ToArray();
         }
 
-        private Vector[] initializeLineCoordinates(Placemark placemark)
+        private static Vector[] InitializeLineCoordinates(Placemark placemark)
         {
             List<Vector> coordinates = new List<Vector>();
             LineString lineString;
@@ -132,7 +132,7 @@ namespace KML2SQL
             return coordinates.ToArray();
         }
 
-        private Vector[] initializePolygonCoordinates(Placemark placemark)
+        private static Vector[] InitializePolygonCoordinates(Placemark placemark)
         {
             List<Vector> coordinates = new List<Vector>();
             Polygon myGeometry;

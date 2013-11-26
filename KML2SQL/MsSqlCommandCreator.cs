@@ -14,7 +14,7 @@ namespace KML2SQL
 {
     static class MsSqlCommandCreator
     {
-        public static SqlCommand createCommand(MapFeature mapFeature, bool geographyMode, int srid, string tableName, 
+        public static SqlCommand CreateCommand(MapFeature mapFeature, bool geographyMode, int srid, string tableName, 
             string placemarkColumnName, SqlConnection connection)
         {
             StringBuilder sbColumns = new StringBuilder();
@@ -25,7 +25,7 @@ namespace KML2SQL
                 sbValues.Append("@" + simpleData.Key + ",");
             }
             StringBuilder sb = new StringBuilder();
-            sb.Append(parseCoordinates(srid, mapFeature, geographyMode));
+            sb.Append(ParseCoordinates(srid, mapFeature, geographyMode));
             sb.Append(string.Format("INSERT INTO {0}(Id,{1}{2}) VALUES(@Id,{3}@placemark)", tableName, sbColumns, placemarkColumnName, sbValues));
             string sqlCommandText = sb.ToString();
             SqlCommand sqlCommand = new SqlCommand(sqlCommandText, connection);
@@ -44,25 +44,25 @@ namespace KML2SQL
             return sqlCommand;
         }
 
-        private static string parseCoordinates(int srid, MapFeature mapFeature, bool geographyMode)
+        private static string ParseCoordinates(int srid, MapFeature mapFeature, bool geographyMode)
         {
             StringBuilder commandString = new StringBuilder();
             if (geographyMode)
             {
-                commandString.Append(parseCoordinatesGeography(srid, mapFeature));
+                commandString.Append(ParseCoordinatesGeography(srid, mapFeature));
                 commandString.Append("DECLARE @placemark geography;");
                 commandString.Append("SET @placemark = @validGeo;");
             }
             else
             {
-                commandString.Append(parseCoordinatesGeometry(srid, mapFeature));
+                commandString.Append(ParseCoordinatesGeometry(srid, mapFeature));
                 commandString.Append("DECLARE @placemark geometry;");
                 commandString.Append("SET @placemark = @validGeom;");
             }
             return commandString.ToString();
         }
 
-        private static string parseCoordinatesGeometry(int srid, MapFeature mapFeature)
+        private static string ParseCoordinatesGeometry(int srid, MapFeature mapFeature)
         {
             StringBuilder commandString = new StringBuilder();
             switch (mapFeature.GeometryType)
@@ -108,10 +108,10 @@ namespace KML2SQL
             return commandString.ToString();
         }
 
-        private static string parseCoordinatesGeography(int srid, MapFeature mapFeature)
+        private static string ParseCoordinatesGeography(int srid, MapFeature mapFeature)
         {
             StringBuilder commandString = new StringBuilder();
-            commandString.Append(parseCoordinatesGeometry(srid, mapFeature));
+            commandString.Append(ParseCoordinatesGeometry(srid, mapFeature));
             commandString.Append("DECLARE @validGeo geography;");
             commandString.Append("SET @validGeo = geography::STGeomFromText(@validGeom.STAsText(), " + srid + @");");
             return commandString.ToString();          

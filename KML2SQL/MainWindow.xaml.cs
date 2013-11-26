@@ -96,7 +96,7 @@ namespace KML2SQL
                 geography = (bool)geographyMode.IsChecked;
             else
                 geography = false;
-            int srid = parseSRID(geography);
+            int srid = ParseSRID(geography);
             if (srid != 0)
             {
                 try
@@ -127,7 +127,7 @@ namespace KML2SQL
             }
         }
 
-        private int parseSRID(bool geographyMode)
+        private int ParseSRID(bool geographyMode)
         {
             if (!geographyMode)
                 return 4326;

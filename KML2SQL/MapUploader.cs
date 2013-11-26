@@ -57,8 +57,8 @@ namespace KML2SQL
             this.logFile = logFile;
             kml = KMLParser.Parse(fileLocation);
             sqlGeoType = geographyMode == true ? "geography" : "geometry";
-            initializeBackgroundWorker();
-            foreach (MapFeature mapFeature in enumerablePlacemarks(kml))
+            InitializeBackgroundWorker();
+            foreach (MapFeature mapFeature in EnumerablePlacemarks(kml))
             {
                 mapFeatures.Add(mapFeature);
                 foreach (KeyValuePair<string, string> pair in mapFeature.Data)
@@ -68,7 +68,7 @@ namespace KML2SQL
             }
         }
 
-        private void initializeBackgroundWorker()
+        private void InitializeBackgroundWorker()
         {
             worker = new BackgroundWorker();
             worker.WorkerReportsProgress = true;
@@ -94,11 +94,11 @@ namespace KML2SQL
                 using (var connection = new System.Data.SqlClient.SqlConnection(connectionString))
                 {
                     connection.Open();
-                    dropTable(connection);
-                    createTable(connection);
+                    DropTable(connection);
+                    CreateTable(connection);
                     foreach (MapFeature mapFeature in mapFeatures)
                     {
-                        SqlCommand command = MsSqlCommandCreator.createCommand(mapFeature, geographyMode, srid, tableName, placemarkColumnName, connection);
+                        SqlCommand command = MsSqlCommandCreator.CreateCommand(mapFeature, geographyMode, srid, tableName, placemarkColumnName, connection);
                         command.ExecuteNonQuery();
                         worker.ReportProgress(0, "Uploading Placemark # " + mapFeature.Id.ToString());
                     }
@@ -132,19 +132,19 @@ namespace KML2SQL
             }
         }
 
-        private IEnumerable<MapFeature> enumerablePlacemarks(Kml kml)
+        private static IEnumerable<MapFeature> EnumerablePlacemarks(Kml kml)
         {
-            int Id = 1;
+            int id = 1;
             foreach (var placemark in kml.Flatten().OfType<Placemark>())
             {
-                MapFeature mapFeature = new MapFeature(placemark, Id);
-                Id++;
+                MapFeature mapFeature = new MapFeature(placemark, id);
+                id++;
                 yield return mapFeature;
             }
         }
         
 
-        private void dropTable(System.Data.SqlClient.SqlConnection connection)
+        private void DropTable(SqlConnection connection)
         {
             try
             {
@@ -160,7 +160,7 @@ namespace KML2SQL
             }
         }
 
-        private void createTable(System.Data.SqlClient.SqlConnection connection)
+        private void CreateTable(SqlConnection connection)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("CREATE TABLE [" + tableName + "] (");
