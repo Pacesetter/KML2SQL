@@ -46,6 +46,7 @@ namespace KML2SQL
 
         public MapUploader(string serverName, string databaseName, string username, string password, string columnName, string fileLocation, string tableName, int srid, bool geographyMode, StringBuilder log, string logFile)
         {
+            UsageReporter.Report("MapUploader Process Started", false);
             connectionString = "Data Source=" + serverName + ";Initial Catalog=" + databaseName + ";Persist Security Info=True;User ID=" + username + ";Password=" + password;
             this.placemarkColumnName = columnName;
             this.fileLocation = fileLocation;
@@ -108,6 +109,7 @@ namespace KML2SQL
             {
                 worker.ReportProgress(0, ex.Message);
                 worker.CancelAsync();
+                UsageReporter.Report(ex.Message, true);
             }
         }
 

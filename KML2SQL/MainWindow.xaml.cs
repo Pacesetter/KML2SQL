@@ -114,6 +114,7 @@ namespace KML2SQL
                 {
                     resultTextBox.Text = "Error: " + ex.ToString();
                     log.Append(ex.ToString() + Environment.NewLine);
+                    UsageReporter.Report(ex.Message, true);
                 }
                 finally
                 {
