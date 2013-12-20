@@ -16,51 +16,59 @@ namespace KML2SQLTests
         //Well, obviously you don't get my passwords! :D
         PasswordList passwordList = new PasswordList();
         Kml kml;
-        StringBuilder log;
+        StringBuilder log = new StringBuilder();
         string logdir = string.Empty;
         string login = "zshuford";
         string database = "TestDB";
-        string connection = "sdfzufbaq8.database.windows.net";
+        string server = "sdfzufbaq8.database.windows.net";
+        private string connectionString;
+
+        [TestInitialize]
+        public void InitializeTests()
+        {
+            connectionString = "Data Source=" + server + ";Initial Catalog=" + database + ";Persist Security Info=True;User ID="
+                + login + ";Password=" + passwordList[0];
+        }
 
         [TestMethod]
         public void CheckNPA()
         {
-            myUploader = new MapUploader(connection, database, login, passwordList[0], "polygon", @"TestData\npa.kml", "myTable", 4326, true, log, logdir);
+            myUploader = new MapUploader(connectionString, "polygon", @"TestData\npa.kml", "myTable", 4326, true, log, logdir);
             myUploader.Upload();
         }
 
         [TestMethod]
         public void BasicKML()
         {
-            myUploader = new MapUploader(connection, database, login, passwordList[0], "polygon", @"TestData\Basic.kml", "myTable", 4326, true, log, logdir);
+            myUploader = new MapUploader(connectionString, "polygon", @"TestData\Basic.kml", "myTable", 4326, true, log, logdir);
             myUploader.Upload();
         }
 
         [TestMethod]
         public void BasicKMLGeometry()
         {
-            myUploader = new MapUploader(connection, database, login, passwordList[0], "polygon", @"TestData\Basic.kml", "myTable", 4326, false, log, logdir);
+            myUploader = new MapUploader(connectionString, "polygon", @"TestData\Basic.kml", "myTable", 4326, false, log, logdir);
             myUploader.Upload();
         }
 
         [TestMethod]
         public void CheckNPAGeometry()
         {
-            myUploader = new MapUploader(connection, database, login, passwordList[0], "polygon", @"TestData\npa.kml", "myTable", 4326, false, log, logdir);
+            myUploader = new MapUploader(connectionString, "polygon", @"TestData\npa.kml", "myTable", 4326, false, log, logdir);
             myUploader.Upload();
         }
 
         [TestMethod]
         public void SchoolTest()
         {
-            myUploader = new MapUploader(connection, database, login, passwordList[0], "polygon", @"TestData\school.kml", "myTable", 4326, true, log, logdir);
+            myUploader = new MapUploader(connectionString, "polygon", @"TestData\school.kml", "myTable", 4326, true, log, logdir);
             myUploader.Upload();
         }
 
         [TestMethod]
         public void SchoolTestGeometry()
         {
-            myUploader = new MapUploader(connection, database, login, passwordList[0], "polygon", @"TestData\school.kml", "myTable", 4326, false, log, logdir);
+            myUploader = new MapUploader(connectionString, "polygon", @"TestData\school.kml", "myTable", 4326, false, log, logdir);
             myUploader.Upload();
         }
 

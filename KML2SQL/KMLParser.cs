@@ -15,10 +15,9 @@ namespace KML2SQL
         {
             KmlFile file = KmlFile.Load(filePath);
             Kml kml = file.Root as Kml;
-            if (kml != null)
-                return kml;
-            else
-                throw new Exception("Error: KML file is null");
+            if (kml == null)
+                throw new Exception("Could not parse file into KML. If this is a KMZ, unzip it first!");
+            return kml;    
         }
     }
 }

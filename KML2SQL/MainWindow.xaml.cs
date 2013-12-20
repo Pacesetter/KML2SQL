@@ -101,8 +101,8 @@ namespace KML2SQL
             {
                 try
                 {
-                    myUploader = new MapUploader(serverNameBox.Text, databaseNameBox.Text, userNameBox.Text, passwordBox.Password,
-                        columnNameBox.Text, KMLFileLocationBox.Text, tableBox.Text, srid, geography, log, logFile);
+                    myUploader = new MapUploader(BuildConnectionString(), columnNameBox.Text, KMLFileLocationBox.Text, 
+                        tableBox.Text, srid, geography, log, logFile);
                     Binding b = new Binding();
                     b.Source = myUploader;
                     b.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
@@ -125,6 +125,12 @@ namespace KML2SQL
                     }
                 }
             }
+        }
+
+        private string BuildConnectionString()
+        {
+            return "Data Source=" + serverNameBox.Text + ";Initial Catalog=" + databaseNameBox.Text + ";Persist Security Info=True;User ID=" 
+                + userNameBox.Text + ";Password=" + passwordBox.Password;
         }
 
         private int ParseSRID(bool geographyMode)

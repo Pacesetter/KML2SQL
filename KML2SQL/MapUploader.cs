@@ -18,64 +18,62 @@ namespace KML2SQL
 {
     public class MapUploader : INotifyPropertyChanged
     {
-        string connectionString;
-        string placemarkColumnName;
-        string fileLocation;
-        string tableName;
-        StringBuilder log;
-        bool geographyMode;
-        int srid;
-        Kml kml;
-        string sqlGeoType;
-        BackgroundWorker worker;
-        List<MapFeature> mapFeatures = new List<MapFeature>();
-        List<string> columnNames = new List<string>();
-        string logFile;
-        private string progress = "";
+        readonly string _connectionString, _placemarkColumnName, _tableName, _sqlGeoType, _logFile;
+        readonly StringBuilder _log;
+        readonly bool _geographyMode;
+        readonly int _srid;
+        BackgroundWorker _worker;
+        readonly List<MapFeature> _mapFeatures = new List<MapFeature>();
+        readonly List<string> _columnNames = new List<string>();
+        private string _progress = "";
 
         public string Progress
         {
-            get { return progress; }
+            get { return _progress; }
             set
             {
-                progress = value;
+                _progress = value;
                 this.OnPropertyChanged("Progress");
-                log.Append(value + Environment.NewLine);
+                _log.Append(value + Environment.NewLine);
             }
         }
 
-        public MapUploader(string serverName, string databaseName, string username, string password, string columnName, string fileLocation, string tableName, int srid, bool geographyMode, StringBuilder log, string logFile)
+        public MapUploader(string connectionString, string columnName, string fileLocation, string tableName, int srid, 
+            bool geographyMode, StringBuilder log, string logFile)
         {
-            UsageReporter.Report("MapUploader Process Started", false);
-            connectionString = "Data Source=" + serverName + ";Initial Catalog=" + databaseName + ";Persist Security Info=True;User ID=" + username + ";Password=" + password;
-            this.placemarkColumnName = columnName;
-            this.fileLocation = fileLocation;
-            this.tableName = tableName;
-            this.geographyMode = geographyMode;
-            this.srid = srid;
-            this.log = log;
-            this.logFile = logFile;
-            kml = KMLParser.Parse(fileLocation);
-            sqlGeoType = geographyMode == true ? "geography" : "geometry";
+            _connectionString = connectionString;
+            _placemarkColumnName = columnName;
+            _tableName = tableName;
+            _geographyMode = geographyMode;
+            _srid = srid;
+            _log = log;
+            _logFile = logFile;
+            _sqlGeoType = geographyMode == true ? "geography" : "geometry";
+            Kml kml = KMLParser.Parse(fileLocation);
+            InitializeMapFeatures(kml);
             InitializeBackgroundWorker();
+            UsageReporter.Report("MapUploader Process Started", false);
+        }
+
+        private void InitializeMapFeatures(Kml kml)
+        {
             foreach (MapFeature mapFeature in EnumerablePlacemarks(kml))
             {
-                mapFeatures.Add(mapFeature);
+                _mapFeatures.Add(mapFeature);
                 foreach (KeyValuePair<string, string> pair in mapFeature.Data)
-                    if (!columnNames.Contains(pair.Key) && pair.Key.ToLower() != "id")
-                            columnNames.Add(pair.Key);
-
+                    if (!_columnNames.Contains(pair.Key) && pair.Key.ToLower() != "id")
+                        _columnNames.Add(pair.Key);
             }
         }
 
         private void InitializeBackgroundWorker()
         {
-            worker = new BackgroundWorker();
-            worker.WorkerReportsProgress = true;
-            worker.DoWork += new DoWorkEventHandler(bw_DoWork);
-            worker.ProgressChanged += new ProgressChangedEventHandler(bw_ProgressChanged);
-            worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw_RunWorkerComleted);
-            worker.WorkerSupportsCancellation = true;
+            _worker = new BackgroundWorker();
+            _worker.WorkerReportsProgress = true;
+            _worker.DoWork += new DoWorkEventHandler(bw_DoWork);
+            _worker.ProgressChanged += new ProgressChangedEventHandler(bw_ProgressChanged);
+            _worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw_RunWorkerComleted);
+            _worker.WorkerSupportsCancellation = true;
         }
 
         public void Upload()
@@ -91,24 +89,24 @@ namespace KML2SQL
         {
             try
             {
-                using (var connection = new System.Data.SqlClient.SqlConnection(connectionString))
+                using (var connection = new System.Data.SqlClient.SqlConnection(_connectionString))
                 {
                     connection.Open();
                     DropTable(connection);
                     CreateTable(connection);
-                    foreach (MapFeature mapFeature in mapFeatures)
+                    foreach (MapFeature mapFeature in _mapFeatures)
                     {
-                        SqlCommand command = MsSqlCommandCreator.CreateCommand(mapFeature, geographyMode, srid, tableName, placemarkColumnName, connection);
+                        SqlCommand command = MsSqlCommandCreator.CreateCommand(mapFeature, _geographyMode, _srid, _tableName, _placemarkColumnName, connection);
                         command.ExecuteNonQuery();
-                        worker.ReportProgress(0, "Uploading Placemark # " + mapFeature.Id.ToString());
+                        _worker.ReportProgress(0, "Uploading Placemark # " + mapFeature.Id.ToString());
                     }
-                    worker.ReportProgress(0, "Done!");
+                    _worker.ReportProgress(0, "Done!");
                 }
             }
             catch (Exception ex)
             {
-                worker.ReportProgress(0, ex.Message);
-                worker.CancelAsync();
+                _worker.ReportProgress(0, ex.Message);
+                _worker.CancelAsync();
                 UsageReporter.Report(ex.Message, true);
             }
         }
@@ -125,10 +123,10 @@ namespace KML2SQL
 
         private void bw_RunWorkerComleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            using (var writer = new StreamWriter(logFile, true))
+            using (var writer = new StreamWriter(_logFile, true))
             {
-                if (log != null)
-                    writer.Write(log);
+                if (_log != null)
+                    writer.Write(_log);
             }
         }
 
@@ -148,33 +146,33 @@ namespace KML2SQL
         {
             try
             {
-                string dropCommandString = "DROP TABLE " + tableName + ";";
+                string dropCommandString = "DROP TABLE " + _tableName + ";";
                 var dropCommand = new System.Data.SqlClient.SqlCommand(dropCommandString, connection);
                 dropCommand.CommandType = System.Data.CommandType.Text;
                 dropCommand.ExecuteNonQuery();
-                worker.ReportProgress(0, "Existing Table Dropped");
+                _worker.ReportProgress(0, "Existing Table Dropped");
             }
             catch
             {
-                worker.ReportProgress(0, "No table found to drop");
+                _worker.ReportProgress(0, "No table found to drop");
             }
         }
 
         private void CreateTable(SqlConnection connection)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("CREATE TABLE [" + tableName + "] (");
+            sb.Append("CREATE TABLE [" + _tableName + "] (");
             sb.Append("[Id] INT NOT NULL PRIMARY KEY,");
-            if (columnNames.Count > 0)
+            if (_columnNames.Count > 0)
             {
-                foreach (string columnName in columnNames)
+                foreach (string columnName in _columnNames)
                     sb.Append("[" + columnName + "] VARCHAR(max), ");
             }
-            sb.Append("[" + placemarkColumnName + "] [sys].[" + sqlGeoType + "] NOT NULL, );");
+            sb.Append("[" + _placemarkColumnName + "] [sys].[" + _sqlGeoType + "] NOT NULL, );");
             var command = new System.Data.SqlClient.SqlCommand(sb.ToString(), connection);
             command.CommandType = System.Data.CommandType.Text;
             command.ExecuteNonQuery();
-            worker.ReportProgress(0, "Table Created");       
+            _worker.ReportProgress(0, "Table Created");       
         }
 
         #region INotifyPropertyChanged Members
