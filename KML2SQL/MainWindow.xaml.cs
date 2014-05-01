@@ -101,7 +101,7 @@ namespace KML2SQL
             {
                 try
                 {
-                    myUploader = new MapUploader(BuildConnectionString(), columnNameBox.Text, KMLFileLocationBox.Text, 
+                    myUploader = new MapUploader(BuildConnectionString(), columnNameBox.Text, KMLFileLocationBox.Text,
                         tableBox.Text, srid, geography, log, logFile);
                     Binding b = new Binding();
                     b.Source = myUploader;
@@ -114,7 +114,6 @@ namespace KML2SQL
                 {
                     resultTextBox.Text = "Error: " + ex.ToString();
                     log.Append(ex.ToString() + Environment.NewLine);
-                    UsageReporter.Report(ex.Message, true);
                 }
                 finally
                 {
@@ -129,7 +128,7 @@ namespace KML2SQL
 
         private string BuildConnectionString()
         {
-            return "Data Source=" + serverNameBox.Text + ";Initial Catalog=" + databaseNameBox.Text + ";Persist Security Info=True;User ID=" 
+            return "Data Source=" + serverNameBox.Text + ";Initial Catalog=" + databaseNameBox.Text + ";Persist Security Info=True;User ID="
                 + userNameBox.Text + ";Password=" + passwordBox.Password;
         }
 

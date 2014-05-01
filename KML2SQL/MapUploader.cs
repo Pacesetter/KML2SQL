@@ -1,18 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.Windows.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using SharpKml.Base;
 using SharpKml.Dom;
 using SharpKml.Engine;
-using Microsoft.SqlServer.Types;
-using System.Data.SqlTypes;
+using System.ComponentModel;
 using System.Data.SqlClient;
-using System.Diagnostics;
-using System.IO;
+using System.Collections.Generic;
 
 namespace KML2SQL
 {
@@ -38,7 +32,7 @@ namespace KML2SQL
             }
         }
 
-        public MapUploader(string connectionString, string columnName, string fileLocation, string tableName, int srid, 
+        public MapUploader(string connectionString, string columnName, string fileLocation, string tableName, int srid,
             bool geographyMode, StringBuilder log, string logFile)
         {
             _connectionString = connectionString;
@@ -52,7 +46,6 @@ namespace KML2SQL
             Kml kml = KMLParser.Parse(fileLocation);
             InitializeMapFeatures(kml);
             InitializeBackgroundWorker();
-            UsageReporter.Report("MapUploader Process Started", false);
         }
 
         private void InitializeMapFeatures(Kml kml)
@@ -87,27 +80,36 @@ namespace KML2SQL
 
         private void DoWork()
         {
+            var failed = false;
             try
             {
-                using (var connection = new System.Data.SqlClient.SqlConnection(_connectionString))
+                using (var connection = new SqlConnection(_connectionString))
                 {
                     connection.Open();
                     DropTable(connection);
                     CreateTable(connection);
                     foreach (MapFeature mapFeature in _mapFeatures)
                     {
-                        SqlCommand command = MsSqlCommandCreator.CreateCommand(mapFeature, _geographyMode, _srid, _tableName, _placemarkColumnName, connection);
-                        command.ExecuteNonQuery();
-                        _worker.ReportProgress(0, "Uploading Placemark # " + mapFeature.Id.ToString());
+                        try
+                        {
+                            SqlCommand command = MsSqlCommandCreator.CreateCommand(mapFeature, _geographyMode, _srid, _tableName, _placemarkColumnName, connection);
+                            command.ExecuteNonQuery();
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+                        _worker.ReportProgress(0, String.Format("Uploading Placemark # {0}", mapFeature.Id));
                     }
                     _worker.ReportProgress(0, "Done!");
                 }
+                if (failed)
+                    throw new AggregateException("Import failed");
             }
             catch (Exception ex)
             {
                 _worker.ReportProgress(0, ex.Message);
                 _worker.CancelAsync();
-                UsageReporter.Report(ex.Message, true);
             }
         }
 
@@ -140,14 +142,14 @@ namespace KML2SQL
                 yield return mapFeature;
             }
         }
-        
+
 
         private void DropTable(SqlConnection connection)
         {
             try
             {
-                string dropCommandString = "DROP TABLE " + _tableName + ";";
-                var dropCommand = new System.Data.SqlClient.SqlCommand(dropCommandString, connection);
+                string dropCommandString = String.Format("DROP TABLE {0};", _tableName);
+                var dropCommand = new SqlCommand(dropCommandString, connection);
                 dropCommand.CommandType = System.Data.CommandType.Text;
                 dropCommand.ExecuteNonQuery();
                 _worker.ReportProgress(0, "Existing Table Dropped");
@@ -161,18 +163,18 @@ namespace KML2SQL
         private void CreateTable(SqlConnection connection)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("CREATE TABLE [" + _tableName + "] (");
+            sb.Append(String.Format("CREATE TABLE [{0}] (", _tableName));
             sb.Append("[Id] INT NOT NULL PRIMARY KEY,");
             if (_columnNames.Count > 0)
             {
                 foreach (string columnName in _columnNames)
-                    sb.Append("[" + columnName + "] VARCHAR(max), ");
+                    sb.Append(String.Format("[{0}] VARCHAR(max), ", columnName));
             }
-            sb.Append("[" + _placemarkColumnName + "] [sys].[" + _sqlGeoType + "] NOT NULL, );");
-            var command = new System.Data.SqlClient.SqlCommand(sb.ToString(), connection);
+            sb.Append(String.Format("[{0}] [sys].[{1}] NOT NULL, );", _placemarkColumnName, _sqlGeoType));
+            var command = new SqlCommand(sb.ToString(), connection);
             command.CommandType = System.Data.CommandType.Text;
             command.ExecuteNonQuery();
-            _worker.ReportProgress(0, "Table Created");       
+            _worker.ReportProgress(0, "Table Created");
         }
 
         #region INotifyPropertyChanged Members
@@ -181,8 +183,8 @@ namespace KML2SQL
 
         void OnPropertyChanged(string propName)
         {
-            if (this.PropertyChanged != null)
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propName));
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(propName));
         }
         #endregion
     }
