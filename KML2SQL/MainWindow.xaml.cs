@@ -34,6 +34,7 @@ namespace KML2SQL
             InitializeComponent();
             if (!Directory.Exists(logFolder))
                 Directory.CreateDirectory(logFolder);
+            RestoreSettings();
         }
 
         private void myUploader_progressUpdate(string text)
@@ -90,7 +91,8 @@ namespace KML2SQL
         private void CreateDatabaseButton_Click(object sender, RoutedEventArgs e)
         {
             log = new StringBuilder();
-            logFile = logFolder + "\\KML2SQL_Log_" + DateTime.Now.ToString("yyyy-MM-dd-hhmmss-fff") + ".txt";
+            SaveSettings();
+            logFile = String.Format("{0}\\KML2SQL_Log_{1:yyyy-MM-dd-hhmmss-fff}.txt", logFolder, DateTime.Now);
             bool geography;
             if (geographyMode.IsChecked != null)
                 geography = (bool)geographyMode.IsChecked;
@@ -107,7 +109,7 @@ namespace KML2SQL
                     b.Source = myUploader;
                     b.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
                     b.Path = new PropertyPath("Progress");
-                    this.resultTextBox.SetBinding(TextBlock.TextProperty, b);
+                    resultTextBox.SetBinding(TextBlock.TextProperty, b);
                     myUploader.Upload();
                 }
                 catch (Exception ex)
@@ -123,6 +125,37 @@ namespace KML2SQL
                             writer.Write(log);
                     }
                 }
+            }
+        }
+
+        private void SaveSettings()
+        {
+            var settings = new Settings();
+            settings.DatabaseName = databaseNameBox.Text;
+            settings.ServerName = serverNameBox.Text;
+            settings.KMLFileName = KMLFileLocationBox.Text;
+            settings.TableName = tableBox.Text;
+            settings.ShapeColumnName = columnNameBox.Text;
+            settings.Login = userNameBox.Text;
+            settings.SRID = sridBox.Text;
+            settings.SRIDEnabled = sridCheckBox.IsChecked.Value;
+            settings.Geography = geographyMode.IsChecked.Value;
+            new SettingsPersister().Persist(settings);
+        }
+        private void RestoreSettings()
+        {
+            var settings = new SettingsPersister().Retrieve();
+            if (settings != null)
+            {
+                geographyMode.IsChecked = settings.Geography;
+                sridCheckBox.IsChecked = settings.SRIDEnabled;
+                sridBox.Text = settings.SRID;
+                userNameBox.Text = settings.Login;
+                columnNameBox.Text = settings.ShapeColumnName;
+                tableBox.Text = settings.TableName;
+                KMLFileLocationBox.Text = settings.KMLFileName;
+                serverNameBox.Text = settings.ServerName;
+                databaseNameBox.Text = settings.DatabaseName;
             }
         }
 
