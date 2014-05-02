@@ -97,7 +97,7 @@ namespace KML2SQL
                         }
                         catch (Exception ex)
                         {
-
+                            _worker.ReportProgress(0, ex.Message);
                         }
                         _worker.ReportProgress(0, String.Format("Uploading Placemark # {0}", mapFeature.Id));
                     }
